@@ -1,0 +1,17 @@
+{
+  "name": "dino-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "T-Rex Runner — монохромный пиксель-арт платформер в формате Telegram Mini App.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
