@@ -1,5 +1,7 @@
 # 🦖 T-Rex Runner
 
+**▶ Играть: [dino-runner-black.vercel.app](https://dino-runner-black.vercel.app)**
+
 Монохромный пиксель-арт раннер в духе оффлайн-динозаврика из Chrome, упакованный
 как **Telegram Mini App**. Маленький Т-Рекс бежит по мокрому асфальту, перепрыгивает
 кактусы и постепенно разгоняется. Над трассой — пиксельное солнце, плывущие облака
@@ -63,7 +65,7 @@ vercel --prod     # продакшн
 
 1. Открой [@BotFather](https://t.me/BotFather) и выбери своего бота.
 2. **Bot Settings → Menu Button → Configure Menu Button** (или команда `/newapp` для отдельного Mini App).
-3. Укажи **продакшн-URL с Vercel** (например `https://dino-runner.vercel.app`).
+3. Укажи **продакшн-URL с Vercel**: `https://dino-runner-black.vercel.app`
 4. Готово — кнопка меню бота открывает игру как Mini App.
 
 > Для полноценного раскрытия на весь экран и haptics нужен актуальный клиент Telegram.
