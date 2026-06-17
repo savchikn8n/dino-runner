@@ -4,7 +4,7 @@ import { Renderer } from "./core/renderer";
 import { Loop } from "./core/loop";
 import { Game } from "./game/Game";
 import { getTheme, DEFAULT_THEME } from "./theme/palette";
-import { initTelegram } from "./telegram/telegram";
+import { initTelegram, onLayoutChange } from "./telegram/telegram";
 import { ScreenManager } from "./ui/ScreenManager";
 import type { Nav } from "./ui/nav";
 import { Menu } from "./ui/screens/Menu";
@@ -21,6 +21,9 @@ document.body.style.background = paper;
 initTelegram(paper, ink);
 
 const renderer = new Renderer(canvas);
+// Пересчитываем масштаб и безопасные отступы при разворачивании/смене раскладки.
+onLayoutChange(() => renderer.resize());
+
 const game = new Game(renderer);
 const screens = new ScreenManager(uiRoot);
 

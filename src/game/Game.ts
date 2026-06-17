@@ -153,7 +153,8 @@ export class Game {
     const best = this.score.highScore;
     const cur = this.score.current;
     const text = best > 0 ? `HI ${pad(best)}  ${pad(cur)}` : pad(cur);
-    ctx.fillText(text, view.width - 14, 12);
+    // Ниже чёлки/шапки Telegram, чтобы счёт не уезжал под системные кнопки.
+    ctx.fillText(text, view.width - 12, view.topInset + 8);
     ctx.textAlign = "left";
   }
 }

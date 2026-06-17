@@ -19,6 +19,7 @@ interface TgWebApp {
   setBackgroundColor?(color: string): void;
   openTelegramLink?(url: string): void;
   openLink?(url: string): void;
+  onEvent?(event: string, handler: () => void): void;
   HapticFeedback?: TgHaptic;
   initDataUnsafe?: { user?: { id: number; first_name?: string; username?: string } };
 }
@@ -47,6 +48,19 @@ export function initTelegram(paper: string, ink: string): void {
     tg.setHeaderColor?.(ink);
   } catch {
     /* старые клиенты могут не поддерживать часть методов */
+  }
+}
+
+/** Подписка на изменения раскладки Telegram (разворот, чёлка, шапка). */
+export function onLayoutChange(cb: () => void): void {
+  const tg = app();
+  if (!tg?.onEvent) return;
+  for (const evt of ["viewportChanged", "safeAreaChanged", "contentSafeAreaChanged"]) {
+    try {
+      tg.onEvent(evt, cb);
+    } catch {
+      /* событие не поддерживается этим клиентом */
+    }
   }
 }
 

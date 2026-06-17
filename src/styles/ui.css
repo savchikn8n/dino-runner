@@ -46,6 +46,7 @@ body {
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  padding: calc(env(safe-area-inset-top) + 52px) 0 calc(env(safe-area-inset-bottom) + 16px);
 }
 #ui.ui--active {
   background: color-mix(in srgb, var(--paper) 78%, transparent);

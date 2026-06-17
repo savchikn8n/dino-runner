@@ -7,7 +7,8 @@
  * выключен — пиксели остаются чёткими.
  */
 
-import { GROUND_BOTTOM_RATIO, view } from "./viewport";
+import { GROUND_Y_RATIO, view } from "./viewport";
+import { topInsetCss } from "./safearea";
 
 export class Renderer {
   readonly ctx: CanvasRenderingContext2D;
@@ -33,7 +34,8 @@ export class Renderer {
     // Вписываем по ширине; высота мира — сколько влезает.
     const scale = cssW / view.width;
     view.height = cssH / scale;
-    view.groundY = view.height * (1 - GROUND_BOTTOM_RATIO);
+    view.groundY = view.height * GROUND_Y_RATIO;
+    view.topInset = topInsetCss() / scale;
 
     this.ctx.setTransform(scale * this.dpr, 0, 0, scale * this.dpr, 0, 0);
     this.ctx.imageSmoothingEnabled = false;

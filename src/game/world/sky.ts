@@ -40,10 +40,18 @@ export class Sky {
     this.seed();
   }
 
+  private cloudTop(): number {
+    return view.topInset + view.height * 0.05;
+  }
+
+  private cloudRange(): number {
+    return Math.max(40, view.groundY - this.cloudTop() - 30);
+  }
+
   private seed(): void {
     this.clouds = [];
-    const top = view.height * 0.06;
-    const range = view.height * 0.42;
+    const top = this.cloudTop();
+    const range = this.cloudRange();
     for (let i = 0; i < 4; i++) {
       this.clouds.push({
         x: Math.random() * view.width,
@@ -59,8 +67,8 @@ export class Sky {
 
   update(dt: number, speed: number): void {
     const drift = speed * 0.18 * dt;
-    const top = view.height * 0.06;
-    const range = view.height * 0.42;
+    const top = this.cloudTop();
+    const range = this.cloudRange();
     for (const c of this.clouds) {
       c.x -= drift;
       if (c.x < -CLOUD[0].length * c.scale) {
@@ -88,9 +96,9 @@ export class Sky {
 
   draw(ctx: CanvasRenderingContext2D, ink: string): void {
     ctx.fillStyle = ink;
-    // Солнце — мягкое, в правом верхнем углу.
+    // Солнце — мягкое, в правом верхнем углу, ниже шапки Telegram.
     ctx.globalAlpha = 0.5;
-    Sky.drawMatrix(ctx, SUN, view.width - 84, view.height * 0.08, 4);
+    Sky.drawMatrix(ctx, SUN, view.width - 76, view.topInset + 46, 4);
 
     if (this.cloudVisibility > 0.01) {
       ctx.globalAlpha = 0.16 * this.cloudVisibility;
