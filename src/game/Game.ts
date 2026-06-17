@@ -7,7 +7,8 @@
  * - over: стоп-кадр после столкновения.
  */
 
-import { SPEED, VIEW } from "../config";
+import { SPEED } from "../config";
+import { view } from "../core/viewport";
 import type { Renderer } from "../core/renderer";
 import { sound } from "../core/audio";
 import { haptic, hapticError } from "../telegram/telegram";
@@ -96,7 +97,7 @@ export class Game {
     if (this.mode !== "running") return;
 
     this.elapsed += dt;
-    this.speed = Math.min(SPEED.max, SPEED.start + SPEED.accel * this.elapsed * 10);
+    this.speed = Math.min(SPEED.max, SPEED.start + SPEED.accel * this.elapsed);
 
     this.field.update(dt, this.speed);
 
@@ -152,7 +153,7 @@ export class Game {
     const best = this.score.highScore;
     const cur = this.score.current;
     const text = best > 0 ? `HI ${pad(best)}  ${pad(cur)}` : pad(cur);
-    ctx.fillText(text, VIEW.width - 16, 14);
+    ctx.fillText(text, view.width - 14, 12);
     ctx.textAlign = "left";
   }
 }

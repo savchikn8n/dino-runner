@@ -1,8 +1,6 @@
 import { ru } from "../../i18n/ru";
-import { LINKS } from "../../config";
 import { CURRENT_VERSION } from "../../data/changelog";
 import { sound } from "../../core/audio";
-import { openLink } from "../../telegram/telegram";
 import { button, el } from "../dom";
 import type { Nav } from "../nav";
 
@@ -65,8 +63,6 @@ export function Settings(nav: Nav): HTMLElement {
     el("div", { class: "settings-list" }, [
       soundBtn,
       button(ru.settings.support, () => nav.toDonate()),
-      button(ru.settings.subscribe, () => openLink(LINKS.channel)),
-      button(ru.settings.devChannel, () => openLink(LINKS.developer)),
     ]),
     el(
       "button",

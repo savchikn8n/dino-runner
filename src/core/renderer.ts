@@ -1,13 +1,13 @@
 /**
- * Рендерер: держит canvas в фиксированном логическом разрешении (VIEW),
- * масштабирует под экран с сохранением пропорций и чёткостью пикселей.
+ * Рендерер: держит фиксированную логическую ширину мира (view.width) и вписывает
+ * её по ширине экрана. Высота мира (view.height) вычисляется из соотношения
+ * сторон, поэтому мир заполняет экран без полей. Линия земли прижата к низу.
  *
- * Мир всегда рисуется в координатах VIEW.width x VIEW.height. Масштаб и
- * центрирование (буквы по бокам) учитываются через transform на backing-store
- * с учётом devicePixelRatio.
+ * Целочисленный масштаб не используем (экраны разные), но image smoothing
+ * выключен — пиксели остаются чёткими.
  */
 
-import { VIEW } from "../config";
+import { GROUND_BOTTOM_RATIO, view } from "./viewport";
 
 export class Renderer {
   readonly ctx: CanvasRenderingContext2D;
@@ -21,7 +21,6 @@ export class Renderer {
     window.addEventListener("resize", () => this.resize());
   }
 
-  /** Подгоняет backing-store под размер контейнера и выставляет transform. */
   resize(): void {
     this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = this.canvas.getBoundingClientRect();
@@ -31,24 +30,16 @@ export class Renderer {
     this.canvas.width = Math.round(cssW * this.dpr);
     this.canvas.height = Math.round(cssH * this.dpr);
 
-    // Масштаб «вписать» (contain) с центрированием.
-    const scale = Math.min(cssW / VIEW.width, cssH / VIEW.height);
-    const offsetX = (cssW - VIEW.width * scale) / 2;
-    const offsetY = (cssH - VIEW.height * scale) / 2;
+    // Вписываем по ширине; высота мира — сколько влезает.
+    const scale = cssW / view.width;
+    view.height = cssH / scale;
+    view.groundY = view.height * (1 - GROUND_BOTTOM_RATIO);
 
-    const ctx = this.ctx;
-    ctx.setTransform(
-      scale * this.dpr,
-      0,
-      0,
-      scale * this.dpr,
-      offsetX * this.dpr,
-      offsetY * this.dpr,
-    );
-    ctx.imageSmoothingEnabled = false;
+    this.ctx.setTransform(scale * this.dpr, 0, 0, scale * this.dpr, 0, 0);
+    this.ctx.imageSmoothingEnabled = false;
   }
 
-  /** Заливает весь видимый кадр (включая поля) цветом фона и чистит мир. */
+  /** Заливает весь кадр цветом фона. */
   clear(paper: string): void {
     const ctx = this.ctx;
     ctx.save();

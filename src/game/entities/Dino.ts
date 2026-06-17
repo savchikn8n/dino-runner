@@ -2,22 +2,26 @@
  * Игрок — Т-Рекс. Прыжок: одиночный импульс вверх + постоянная гравитация →
  * плавный взлёт и падение. Вариативная высота: если отпустить прыжок раньше,
  * падение ускоряется. Анимация бега — циклическая смена кадров ног.
+ *
+ * Линия земли (view.groundY) зависит от экрана, поэтому baseY вычисляется
+ * динамически — корректно после поворота/ресайза.
  */
 
-import { DINO, VIEW } from "../../config";
+import { DINO } from "../../config";
+import { view } from "../../core/viewport";
 import { drawSprite, spriteCols, spriteRows, type Sprite } from "../sprites";
 import { getSkin, type Skin } from "../../theme/skins";
-import type { AABB } from "../systems/collision";
-import { inset } from "../systems/collision";
+import { inset, type AABB } from "../systems/collision";
 
 type DinoState = "running" | "jumping" | "dead";
 
 export class Dino {
   private skin: Skin;
   private pixel: number;
+  private readonly heightPx: number;
+  private readonly widthPx: number;
   private vy = 0;
-  private y: number; // верхняя кромка спрайта
-  private readonly baseY: number; // y, когда стоит на земле
+  private y = 0;
   private state: DinoState = "running";
   private runTimer = 0;
   private runFrame = 0;
@@ -25,10 +29,16 @@ export class Dino {
 
   constructor(skinId: string) {
     this.skin = getSkin(skinId);
-    // Подгоняем «пиксель» матрицы так, чтобы спрайт занял заданную высоту.
-    this.pixel = Math.max(1, Math.round(DINO.height / spriteRows(this.skin.run[0])));
-    this.baseY = VIEW.groundY - spriteRows(this.skin.run[0]) * this.pixel;
+    const rows = spriteRows(this.skin.run[0]);
+    this.pixel = Math.max(1, Math.round(DINO.height / rows));
+    this.heightPx = rows * this.pixel;
+    this.widthPx = spriteCols(this.skin.run[0]) * this.pixel;
     this.y = this.baseY;
+  }
+
+  /** Y, когда Т-Рекс стоит на земле (зависит от текущей высоты экрана). */
+  private get baseY(): number {
+    return view.groundY - this.heightPx;
   }
 
   reset(): void {
@@ -44,7 +54,7 @@ export class Dino {
     return this.state === "dead";
   }
 
-  /** Прыжок возможен только с земли. Возвращает true, если прыжок начался. */
+  /** Прыжок возможен только с земли. */
   jump(): boolean {
     if (this.state === "dead") return false;
     if (this.y >= this.baseY - 0.5) {
@@ -56,7 +66,7 @@ export class Dino {
     return false;
   }
 
-  /** Отпускание ввода — включает ускоренное падение для вариативной высоты. */
+  /** Отпускание ввода — ускоренное падение для вариативной высоты прыжка. */
   release(): void {
     this.holding = false;
   }
@@ -78,7 +88,7 @@ export class Dino {
         this.state = "running";
       }
     } else {
-      // бег: проматываем кадры ног
+      this.y = this.baseY; // держим на земле при смене высоты экрана
       this.runTimer += dt;
       const frameDur = 1 / DINO.runFps;
       while (this.runTimer >= frameDur) {
@@ -94,15 +104,8 @@ export class Dino {
     return this.skin.run[this.runFrame];
   }
 
-  /** Хитбокс с «прощением» (чуть меньше спрайта). */
   hitbox(): AABB {
-    const box: AABB = {
-      x: DINO.x,
-      y: this.y,
-      w: spriteCols(this.skin.run[0]) * this.pixel,
-      h: spriteRows(this.skin.run[0]) * this.pixel,
-    };
-    return inset(box, DINO.hitboxInset);
+    return inset({ x: DINO.x, y: this.y, w: this.widthPx, h: this.heightPx }, DINO.hitboxInset);
   }
 
   draw(ctx: CanvasRenderingContext2D, ink: string): void {

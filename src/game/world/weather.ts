@@ -1,10 +1,11 @@
 /**
  * Погода — чисто визуальный хук, на геймплей не влияет. Состояния циклически
- * меняются по таймеру: ясно → дождь → снег → пасмурно. Дождь/снег — частицы,
+ * меняются по таймеру: ясно → дождь → пасмурно → снег. Дождь/снег — частицы,
  * пасмурно гасит облака неба.
  */
 
-import { VIEW, WEATHER } from "../../config";
+import { WEATHER } from "../../config";
+import { view } from "../../core/viewport";
 import type { Sky } from "./sky";
 
 type WeatherKind = "clear" | "rain" | "snow" | "overcast";
@@ -47,29 +48,30 @@ export class Weather {
   private apply(kind: WeatherKind): void {
     this.kind = kind;
     this.particles = [];
+    const count = Math.round(view.width / 9);
     if (kind === "rain") {
-      for (let i = 0; i < 60; i++) this.particles.push(this.makeDrop());
+      for (let i = 0; i < count; i++) this.particles.push(this.makeDrop());
     } else if (kind === "snow") {
-      for (let i = 0; i < 50; i++) this.particles.push(this.makeFlake());
+      for (let i = 0; i < count; i++) this.particles.push(this.makeFlake());
     }
   }
 
   private makeDrop(): Particle {
     return {
-      x: Math.random() * (VIEW.width + 60) - 30,
-      y: Math.random() * VIEW.height,
-      vy: 520 + Math.random() * 120,
-      vx: -120,
-      len: 6 + Math.random() * 5,
+      x: Math.random() * (view.width + 60) - 30,
+      y: Math.random() * view.height,
+      vy: 540 + Math.random() * 140,
+      vx: -130,
+      len: 7 + Math.random() * 5,
     };
   }
 
   private makeFlake(): Particle {
     return {
-      x: Math.random() * VIEW.width,
-      y: Math.random() * VIEW.height,
-      vy: 60 + Math.random() * 40,
-      vx: -20 + Math.random() * 16,
+      x: Math.random() * view.width,
+      y: Math.random() * view.height,
+      vy: 70 + Math.random() * 50,
+      vx: -22 + Math.random() * 18,
       len: 2,
     };
   }
@@ -82,7 +84,6 @@ export class Weather {
       this.scheduleNext();
     }
 
-    // Плавно гасим/возвращаем облака: в пасмурную погоду их нет.
     const target = this.kind === "overcast" ? 0 : 1;
     this.sky.cloudVisibility += (target - this.sky.cloudVisibility) * Math.min(1, dt * 1.5);
 
@@ -90,11 +91,11 @@ export class Weather {
     for (const p of this.particles) {
       p.y += p.vy * dt;
       p.x += p.vx * dt;
-      if (p.y > VIEW.groundY) {
+      if (p.y > view.groundY) {
         Object.assign(p, isFlake ? this.makeFlake() : this.makeDrop());
         p.y = -4;
       }
-      if (p.x < -30) p.x = VIEW.width + 10;
+      if (p.x < -30) p.x = view.width + 10;
     }
   }
 
@@ -103,7 +104,7 @@ export class Weather {
     if (this.kind === "rain") {
       ctx.strokeStyle = ink;
       ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.4;
       ctx.beginPath();
       for (const p of this.particles) {
         ctx.moveTo(Math.round(p.x), Math.round(p.y));
@@ -113,10 +114,8 @@ export class Weather {
       ctx.globalAlpha = 1;
     } else if (this.kind === "snow") {
       ctx.fillStyle = ink;
-      ctx.globalAlpha = 0.7;
-      for (const p of this.particles) {
-        ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2);
-      }
+      ctx.globalAlpha = 0.6;
+      for (const p of this.particles) ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2);
       ctx.globalAlpha = 1;
     }
   }

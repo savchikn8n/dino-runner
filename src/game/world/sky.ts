@@ -1,9 +1,10 @@
 /**
  * Небо: пиксельное солнце сверху и облака, плывущие вдоль трассы медленнее земли
- * (параллакс → ощущение глубины). Видимость облаков задаётся погодой (weather).
+ * (параллакс → ощущение глубины). Облака и солнце рисуются полупрозрачно, чтобы
+ * читаться светло-серыми (в монохромной палитре это всё тот же ink с альфой).
  */
 
-import { VIEW } from "../../config";
+import { view } from "../../core/viewport";
 
 interface Cloud {
   x: number;
@@ -11,7 +12,6 @@ interface Cloud {
   scale: number;
 }
 
-// Пиксельная матрица облака (силуэт).
 const CLOUD: string[] = [
   "...XXXX...",
   ".XXXXXXXX.",
@@ -19,21 +19,21 @@ const CLOUD: string[] = [
   ".XXXXXXXX.",
 ];
 
-// Пиксельное «солнце» (кольцо).
+// Пиксельное «солнце» — кольцо.
 const SUN: string[] = [
   "..XXXX..",
-  ".XXXXXX.",
-  "XXXXXXXX",
-  "XXXXXXXX",
-  "XXXXXXXX",
-  "XXXXXXXX",
-  ".XXXXXX.",
+  ".X....X.",
+  "X......X",
+  "X......X",
+  "X......X",
+  "X......X",
+  ".X....X.",
   "..XXXX..",
 ];
 
 export class Sky {
   private clouds: Cloud[] = [];
-  /** Доля видимости облаков 0..1 (плавно гасится в пасмурную/ясную погоду). */
+  /** Доля видимости облаков 0..1 (гаснет в пасмурную погоду). */
   cloudVisibility = 1;
 
   constructor() {
@@ -42,10 +42,12 @@ export class Sky {
 
   private seed(): void {
     this.clouds = [];
+    const top = view.height * 0.06;
+    const range = view.height * 0.42;
     for (let i = 0; i < 4; i++) {
       this.clouds.push({
-        x: Math.random() * VIEW.width,
-        y: 30 + Math.random() * 80,
+        x: Math.random() * view.width,
+        y: top + Math.random() * range,
         scale: 2 + Math.floor(Math.random() * 2),
       });
     }
@@ -56,13 +58,14 @@ export class Sky {
   }
 
   update(dt: number, speed: number): void {
-    // Облака медленнее земли (параллакс ~0.18 от скорости мира).
     const drift = speed * 0.18 * dt;
+    const top = view.height * 0.06;
+    const range = view.height * 0.42;
     for (const c of this.clouds) {
       c.x -= drift;
       if (c.x < -CLOUD[0].length * c.scale) {
-        c.x = VIEW.width + Math.random() * 60;
-        c.y = 30 + Math.random() * 80;
+        c.x = view.width + Math.random() * 60;
+        c.y = top + Math.random() * range;
       }
     }
   }
@@ -76,20 +79,22 @@ export class Sky {
   ): void {
     for (let r = 0; r < m.length; r++) {
       for (let c = 0; c < m[r].length; c++) {
-        if (m[r][c] === "X") ctx.fillRect(Math.round(x) + c * pixel, Math.round(y) + r * pixel, pixel, pixel);
+        if (m[r][c] === "X") {
+          ctx.fillRect(Math.round(x) + c * pixel, Math.round(y) + r * pixel, pixel, pixel);
+        }
       }
     }
   }
 
   draw(ctx: CanvasRenderingContext2D, ink: string): void {
-    // Солнце — фиксировано в верхней зоне.
     ctx.fillStyle = ink;
-    Sky.drawMatrix(ctx, SUN, VIEW.width - 120, 28, 4);
+    // Солнце — мягкое, в правом верхнем углу.
+    ctx.globalAlpha = 0.5;
+    Sky.drawMatrix(ctx, SUN, view.width - 84, view.height * 0.08, 4);
 
-    if (this.cloudVisibility <= 0.01) return;
-    ctx.globalAlpha = this.cloudVisibility;
-    for (const c of this.clouds) {
-      Sky.drawMatrix(ctx, CLOUD, c.x, c.y, c.scale);
+    if (this.cloudVisibility > 0.01) {
+      ctx.globalAlpha = 0.16 * this.cloudVisibility;
+      for (const c of this.clouds) Sky.drawMatrix(ctx, CLOUD, c.x, c.y, c.scale);
     }
     ctx.globalAlpha = 1;
   }
